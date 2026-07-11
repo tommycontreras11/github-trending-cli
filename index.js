@@ -1,13 +1,15 @@
+import { fetchingData } from "./helper.js"
+
 process.stdin.on("data", (data) => {
     const input = data.toString().trim()
     const inputSplitted = input.split(" ")
  
     const command = inputSplitted[0]
-    const filters = inputSplitted.slice(1)
+    const arg = inputSplitted.slice(1)
 
     switch(command) {
         case "trending-repos":
-            console.log("Trending")
+            fetchingData(arg)
             break;
         case "exit":
             process.exit()
