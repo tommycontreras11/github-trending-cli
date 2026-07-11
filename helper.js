@@ -13,19 +13,29 @@ const inputValidations = [
   },
 ];
 
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-
-const formatDate = (date) => {
-  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}}`;
-};
-
 const timeRanges = new Map([
-  ["day", today],
-  ["week", today.setDate(today.getDate() - 7)],
-  ["month", today.setMonth(today.getMonth() - 1)],
-  ["year", today.setFullYear(today.getFullYear() - 1)],
+  ["day", new Date()],
+  ["week", new Date().setDate(new Date().getDate() - 7)],
+  ["month", new Date().setMonth(new Date().getMonth() - 1)],
+  ["year", new Date().setFullYear(new Date().getFullYear() - 1)],
 ]);
+
+const formatDate = (dateToFormat) => {
+  const date = new Date(dateToFormat);
+
+  let month = date.getMonth(),
+    day = date.getDate();
+
+  if (date.getMonth() < 10) {
+    month = `0${date.getMonth() + 1}`;
+  }
+
+  if (date.getDate() < 10) {
+    day = `0${date.getDate()}`;
+  }
+
+  return `${date.getFullYear()}-${month}-${day}`;
+};
 
 const findInputById = (id) => inputValidations.find((input) => input.id == id);
 
@@ -38,7 +48,6 @@ const validateInput = (id, value) => {
   }
 
   if (input.type === "number") {
-    console.log("value: ", value);
     if (value && !value.startsWith("--")) {
       const inputValue = Number(value);
 
@@ -106,4 +115,25 @@ export const fetchingData = async (arg) => {
 
   const duration = getPropertyAndValue(arg, "--duration");
   const limit = getPropertyAndValue(arg, "--limit");
+
+  const getTimeRange = formatDate(timeRanges.get(duration.value));
+
+  try {
+    const response = await fetch(
+      `https://api.github.com/search/repositorie`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const data = await response.json();
+
+    if (data.status != 200) {
+      console.log(data);
+    }
+  } catch (error) {
+    console.log("Something went wrong while trying to fetch the data: ", error);
+  }
 };
