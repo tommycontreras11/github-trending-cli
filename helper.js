@@ -1,24 +1,38 @@
-const inputValidations = [
-  {
-    id: "--duration",
-    values: ["day", "week", "month", "year"],
-    type: "string",
-    defaultValue: "week",
-  },
-  {
-    id: "--limit",
-    type: "number",
-    nonNegativeValue: true,
-    defaultValue: 10,
-  },
-];
-
-const timeRanges = new Map([
-  ["day", new Date()],
-  ["week", new Date().setDate(new Date().getDate() - 7)],
-  ["month", new Date().setMonth(new Date().getMonth() - 1)],
-  ["year", new Date().setFullYear(new Date().getFullYear() - 1)],
+const inputRules = new Map([
+  [
+    "--duration",
+    {
+      values: ["day", "week", "month", "year"],
+      type: "string",
+      defaultValue: "week",
+    },
+  ],
+  [
+    "--limit",
+    {
+      type: "number",
+      nonNegativeValue: true,
+      defaultValue: 10,
+    },
+  ],
 ]);
+
+const findInputById = (id) => inputRules.get(id);
+
+const getTimeByDuration = (duration) => {
+  const date = new Date();
+
+  switch (duration) {
+    case "day":
+      return date;
+    case "week":
+      return date.setMonth(date.getMonth() - 1);
+    case "month":
+      return date.setMonth(date.getMonth() - 1);
+    case "year":
+      return date.setFullYear(date.getFullYear() - 1);
+  }
+};
 
 const formatDate = (dateToFormat) => {
   const date = new Date(dateToFormat);
@@ -37,9 +51,7 @@ const formatDate = (dateToFormat) => {
   return `${date.getFullYear()}-${month}-${day}`;
 };
 
-const findInputById = (id) => inputValidations.find((input) => input.id == id);
-
-const validateInput = (id, value) => {
+const inputValidationRules = (id, value) => {
   const input = findInputById(id);
 
   if (!input) {
@@ -70,7 +82,7 @@ const validateInput = (id, value) => {
   return true;
 };
 
-const validateInputs = (arg) => {
+export const inputValidations = (arg) => {
   if (arg?.length == 0) {
     console.log("You must provided the arguments (--duration, --limit)");
     return;
@@ -80,14 +92,12 @@ const validateInputs = (arg) => {
     arg.length % 2 === 0 ? arg.length / 2 : arg.length - 1;
 
   for (let i = 0; i < countOfProperties; i++) {
-    const isValid = validateInput(
+    const isNotValid = inputValidationRules(
       arg[i == 0 ? 0 : i + 1],
       arg[i == 0 ? i + 1 : i + 2],
     );
 
-    if (!isValid) {
-      return true;
-    }
+    if (!isNotValid) return true;
   }
 
   return false;
@@ -108,36 +118,52 @@ const getPropertyAndValue = (arg, property) => {
   };
 };
 
-const getDataFormatted = (data) => {
-  let dataFormatted = [];
-
-  for (let i = 0; i < data.length; i++) {
-    const current = data[i];
-
-    dataFormatted.push({
-      repository_name: current.name,
-      description: current?.description ?? "No description provided",
-      numberOfStarts: current.stargazers_count,
-      language: current?.language ?? "No language provided",
-    });
-  }
-
-  console.log(dataFormatted);
+const formatRepositories = (repositories) => {
+  return repositories.map((repo) => ({
+      repository_name: repo.name,
+      description: repo?.description ?? "No description provided",
+      numberOfStarts: repo.stargazers_count,
+      language: repo?.language ?? "No language provided",
+  }))
 };
 
-export const fetchingData = async (arg) => {
-  const invalidInputs = validateInputs(arg);
+const displayRepositories = (repositories) => console.log(repositories) 
 
-  if (invalidInputs) return;
+const isErrorFoundInApi = (data, response) => {
+  let isValid = true;
 
+  if (!response.ok) {
+    console.log(data);
+    isValid = false;
+  }
+
+  if (data.status && data.status != 200) {
+    console.log(data);
+    isValid = false;
+  }
+
+  if (data.total_count == 0) {
+    console.log("Sorry, not data found, try to select another time range.");
+    isValid = false;
+  }
+
+  return isValid;
+};
+
+export const getValuesFromProperties = (arg) => {
   const duration = getPropertyAndValue(arg, "--duration");
-  const limit = getPropertyAndValue(arg, "--limit");
+  const getTimeRange = formatDate(getTimeByDuration(duration.value));
 
-  const getTimeRange = formatDate(timeRanges.get(duration.value));
+  return {
+    date: getTimeRange,
+    limit: Number(getPropertyAndValue(arg, "--limit").value),
+  };
+};
 
+export const getTrendingRepositories = async (date, limit) => {
   try {
     const response = await fetch(
-      `https://api.github.com/search/repositories?q=created:%3E${getTimeRange}&sort=stars&order=desc&per_page=${Number(limit.value)}`,
+      `https://api.github.com/search/repositories?q=created:%3E${date}&sort=stars&order=desc&per_page=${limit}`,
       {
         method: "GET",
         headers: {
@@ -147,16 +173,10 @@ export const fetchingData = async (arg) => {
     );
     const data = await response.json();
 
-    if (data.status && data.status != 200) {
-      console.log(data);
-    }
+    const isValid = isErrorFoundInApi(data, response);
+    if (!isValid) return;
 
-    if (data.total_count == 0) {
-      console.log("Sorry, not data found, try to select another time range.");
-      return;
-    }
-
-    getDataFormatted(data.items)
+    displayRepositories(formatRepositories(data.items));
   } catch (error) {
     console.log("Something went wrong while trying to fetch the data: ", error);
   }
