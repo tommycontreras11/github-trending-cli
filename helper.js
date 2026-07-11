@@ -108,6 +108,23 @@ const getPropertyAndValue = (arg, property) => {
   };
 };
 
+const getDataFormatted = (data) => {
+  let dataFormatted = [];
+
+  for (let i = 0; i < data.length; i++) {
+    const current = data[i];
+
+    dataFormatted.push({
+      repository_name: current.name,
+      description: current?.description ?? "No description provided",
+      numberOfStarts: current.stargazers_count,
+      language: current?.language ?? "No language provided",
+    });
+  }
+
+  console.log(dataFormatted);
+};
+
 export const fetchingData = async (arg) => {
   const invalidInputs = validateInputs(arg);
 
@@ -120,7 +137,7 @@ export const fetchingData = async (arg) => {
 
   try {
     const response = await fetch(
-      `https://api.github.com/search/repositories?q=created:%3E${getTimeRange}&sort=stars&order=desc`,
+      `https://api.github.com/search/repositories?q=created:%3E${getTimeRange}&sort=stars&order=desc&per_page=${Number(limit.value)}`,
       {
         method: "GET",
         headers: {
@@ -139,20 +156,7 @@ export const fetchingData = async (arg) => {
       return;
     }
 
-    let dataFormatted = [];
-
-    for (let i = 0; i < 2; i++) {
-      const current = data.items[i];
-
-      dataFormatted.push({
-        repository_name: current.name,
-        description: current?.description ?? "No description provided",
-        numberOfStarts: current.stargazers_count,
-        language: current?.language ?? "No language provided",
-      });
-    }
-
-    console.log(dataFormatted);
+    getDataFormatted(data.items)
   } catch (error) {
     console.log("Something went wrong while trying to fetch the data: ", error);
   }
