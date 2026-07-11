@@ -1,6 +1,6 @@
 import { fetchingData } from "./helper.js"
 
-process.stdin.on("data", (data) => {
+process.stdin.on("data", async (data) => {
     const input = data.toString().trim()
     const inputSplitted = input.split(" ")
  
@@ -9,7 +9,7 @@ process.stdin.on("data", (data) => {
 
     switch(command) {
         case "trending-repos":
-            fetchingData(arg)
+            await fetchingData(arg)
             break;
         case "exit":
             process.exit()
