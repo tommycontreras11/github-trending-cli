@@ -120,7 +120,7 @@ export const fetchingData = async (arg) => {
 
   try {
     const response = await fetch(
-      `https://api.github.com/search/repositorie`,
+      `https://api.github.com/search/repositories?q=created:%3E${getTimeRange}&sort=stars&order=desc`,
       {
         method: "GET",
         headers: {
@@ -130,9 +130,29 @@ export const fetchingData = async (arg) => {
     );
     const data = await response.json();
 
-    if (data.status != 200) {
+    if (data.status && data.status != 200) {
       console.log(data);
     }
+
+    if (data.total_count == 0) {
+      console.log("Sorry, not data found, try to select another time range.");
+      return;
+    }
+
+    let dataFormatted = [];
+
+    for (let i = 0; i < 2; i++) {
+      const current = data.items[i];
+
+      dataFormatted.push({
+        repository_name: current.name,
+        description: current?.description ?? "No description provided",
+        numberOfStarts: current.stargazers_count,
+        language: current?.language ?? "No language provided",
+      });
+    }
+
+    console.log(dataFormatted);
   } catch (error) {
     console.log("Something went wrong while trying to fetch the data: ", error);
   }
