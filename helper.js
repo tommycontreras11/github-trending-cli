@@ -135,7 +135,7 @@ const formatRepositories = (repositories) => {
   return repositories.map((repo) => ({
       repository_name: repo.name,
       description: repo?.description ?? "No description provided",
-      numberOfStarts: repo.stargazers_count,
+      number_of_starts: repo.stargazers_count,
       language: repo?.language ?? "No language provided",
   }))
 };
