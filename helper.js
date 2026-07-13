@@ -123,10 +123,9 @@ const getPropertyAndValue = (arg, property) => {
 
 export const getValuesFromProperties = (arg) => {
   const duration = getPropertyAndValue(arg, "--duration");
-  const getTimeRange = formatDate(getTimeByDuration(duration.value));
 
   return {
-    date: getTimeRange,
+    date: formatDate(getTimeByDuration(duration.value)),
     limit: Number(getPropertyAndValue(arg, "--limit").value),
   };
 };
