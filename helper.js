@@ -51,6 +51,8 @@ const formatDate = (dateToFormat) => {
   return `${date.getFullYear()}-${month}-${day}`;
 };
 
+const isAProperty = (input) => input && input?.startsWith("--");
+
 const inputValidationRules = (id, value) => {
   const input = findInputById(id);
 
@@ -59,19 +61,19 @@ const inputValidationRules = (id, value) => {
     return false;
   }
 
+  if(isAProperty(value)) return true
+
   if (input.type === "number") {
-    if (value && !value.startsWith("--")) {
       const inputValue = Number(value);
 
       if (input.nonNegativeValue && inputValue < 0) {
         console.log(`Sorry, we don't allow negative values`);
         return false;
       }
-    }
   }
 
   if (input?.values && input.values.length > 0) {
-    if (value && !value.startsWith("--") && !input.values.includes(value)) {
+    if (!input.values.includes(value)) {
       console.log(
         `Sorry, the values we allow for the id "${id}" are ${input.values}`,
       );
@@ -93,7 +95,9 @@ export const inputValidations = (arg) => {
 
   for (let i = 0; i < countOfProperties; i++) {
     const isNotValid = inputValidationRules(
+      // The properties are in pair indexes
       arg[i == 0 ? 0 : i + 1],
+      // The values are in odd indexes 
       arg[i == 0 ? i + 1 : i + 2],
     );
 
@@ -103,8 +107,6 @@ export const inputValidations = (arg) => {
   return false;
 };
 
-const isAProperty = (input) => input?.startsWith("--");
-
 const getPropertyAndValue = (arg, property) => {
   const propertyIndex = arg.findIndex((p) => p == property);
   const getInputById = findInputById(property);
@@ -112,9 +114,20 @@ const getPropertyAndValue = (arg, property) => {
   return {
     id: arg[propertyIndex],
     value:
+    //If the next argument is a property or is undefined, use the default value
       isAProperty(arg[propertyIndex + 1]) || arg[propertyIndex + 1] == undefined
         ? getInputById.defaultValue
         : arg[propertyIndex + 1],
+  };
+};
+
+export const getValuesFromProperties = (arg) => {
+  const duration = getPropertyAndValue(arg, "--duration");
+  const getTimeRange = formatDate(getTimeByDuration(duration.value));
+
+  return {
+    date: getTimeRange,
+    limit: Number(getPropertyAndValue(arg, "--limit").value),
   };
 };
 
@@ -126,8 +139,6 @@ const formatRepositories = (repositories) => {
       language: repo?.language ?? "No language provided",
   }))
 };
-
-const displayRepositories = (repositories) => console.log(repositories) 
 
 const isErrorFoundInApi = (data, response) => {
   let isValid = true;
@@ -150,15 +161,7 @@ const isErrorFoundInApi = (data, response) => {
   return isValid;
 };
 
-export const getValuesFromProperties = (arg) => {
-  const duration = getPropertyAndValue(arg, "--duration");
-  const getTimeRange = formatDate(getTimeByDuration(duration.value));
-
-  return {
-    date: getTimeRange,
-    limit: Number(getPropertyAndValue(arg, "--limit").value),
-  };
-};
+const displayRepositories = (repositories) => console.log(repositories) 
 
 export const getTrendingRepositories = async (date, limit) => {
   try {
