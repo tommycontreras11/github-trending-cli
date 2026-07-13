@@ -39,7 +39,6 @@ The CLI allows developers to quickly discover trending repositories by specifyin
 
 # 🛠 Technologies Used
 
-- Node.js
 - JavaScript (ES Modules)
 - GitHub REST API
 - Fetch API
@@ -108,12 +107,6 @@ Clone the repository:
 git clone https://github.com/tommycontreras11/github-trending-cli.git
 ```
 
-Install dependencies:
-
-```bash
-npm install
-```
-
 ---
 
 # ▶ Running the Project
@@ -121,7 +114,7 @@ npm install
 Start the CLI:
 
 ```bash
-npm start
+node index.js
 ```
 
 Once running, you can execute commands directly from the terminal.
